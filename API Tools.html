@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToolsHub API Tools</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #72c6ef, #d8d8d8);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+        }
+        img {
+            max-width: 150px;
+        }
+        h1 {
+            color: #2b4d65;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .form-section {
+            margin-bottom: 20px;
+        }
+        .form-section input, .form-section button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .task-box, .listing-profile, .work-history, .api-key-history {
+            background: #f7f7f7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="toolhub logo.png" alt="ToolsHub Logo">
+        <h1>ToolsHub API Tools</h1>
+    </header>
+    <div class="container">
+        <div class="form-section" id="loginSection">
+            <h2>Signup/Login</h2>
+            <input type="text" placeholder="Gmail Username" id="email" required>
+            <input type="password" placeholder="Password" id="password" required>
+            <input type="text" placeholder="Phone Number (optional)" id="phone">
+            <button class="button" id="submitBtn">Sign Up / Login</button>
+        </div>
+
+        <div class="form-section hidden" id="taskSection">
+            <h2>Generate API Key</h2>
+            <button class="button" id="generateApiKey">Generate API Key</button>
+            <div class="api-key-history">
+                <h3>API Key History</h3>
+                <ul id="apiKeyList"></ul>
+            </div>
+        </div>
+
+        <div class="form-section hidden" id="taskManagementSection">
+            <h2>Task</h2>
+            <input type="text" placeholder="Search for a task..." id="taskSearch">
+            <button class="button" id="startTask">Start Task</button>
+        </div>
+
+        <div class="form-section hidden" id="platformSection">
+            <h2>Search for Review Platform</h2>
+            <input type="text" placeholder="Enter review platform..." id="reviewPlatformSearch">
+            <button class="button" id="searchPlatform">Search Platform</button>
+            <div id="selectedPlatform" style="margin-top: 10px;"></div>
+        </div>
+
+        <div class="form-section hidden" id="listingSection">
+            <h2>Listing Profile</h2>
+            <input type="text" placeholder="Enter Listing Profile" id="listingProfile">
+            <button class="button" id="addListing">Add Listing</button>
+        </div>
+
+        <div class="work-history hidden">
+            <h3>Working Records</h3>
+            <ul id="workRecordsList"></ul>
+        </div>
+
+        <div class="form-section hidden">
+            <button class="button" id="logoutBtn">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        let apiKeyHistory = [];
+        let workRecords = [];
+        let selectedPlatform = '';
+
+        // Load user data from sessionStorage or create new user data
+        function loadUserData(email) {
+            const userData = JSON.parse(sessionStorage.getItem(email));
+            if (userData) {
+                apiKeyHistory = userData.apiKeyHistory || [];
+                workRecords = userData.workRecords || [];
+                updateWorkRecords();
+                updateApiKeyList();
+            }
+        }
+
+        // Update work records display
+        function updateWorkRecords() {
+            document.getElementById('workRecordsList').innerHTML = workRecords.map(record => `<li>${record}</li>`).join('');
+        }
+
+        // Update API key history display
+        function updateApiKeyList() {
+            document.getElementById('apiKeyList').innerHTML = apiKeyHistory.map(key => `<li>${key}</li>`).join('');
+        }
+
+        document.getElementById('submitBtn').addEventListener('click', function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // Check if the user has signed up before
+            if (sessionStorage.getItem(email)) {
+                alert(`Welcome back, ${email}!`);
+                loadUserData(email);
+                showTaskManagement();
+            } else {
+                alert(`Signed up with ${email}`);
+                const newUser = {
+                    apiKeyHistory: [],
+                    workRecords: []
+                };
+                sessionStorage.setItem(email, JSON.stringify(newUser));
+                showTaskManagement();
+            }
+        });
+
+        document.getElementById('generateApiKey').addEventListener('click', function() {
+            const apiKey = 'API-' + Math.floor(Math.random() * 1000000);
+            apiKeyHistory.push(apiKey);
+            const email = document.getElementById('email').value;
+            const userData = JSON.parse(sessionStorage.getItem(email));
+            userData.apiKeyHistory = apiKeyHistory;
+            sessionStorage.setItem(email, JSON.stringify(userData));
+            updateApiKeyList();
+        });
+
+        document.getElementById('startTask').addEventListener('click', function() {
+            const task = document.getElementById('taskSearch').value;
+            if (task) {
+                const progressMessage = `Started task: ${task} - Estimated completion time: 24 to 72 hours.`;
+                workRecords.push(progressMessage);
+                const email = document.getElementById('email').value;
+                const userData = JSON.parse(sessionStorage.getItem(email));
+                userData.workRecords = workRecords;
+                sessionStorage.setItem(email, JSON.stringify(userData));
+                updateWorkRecords();
+            } else {
+                alert('Please enter a task.');
+            }
+        });
+
+        document.getElementById('searchPlatform').addEventListener('click', function() {
+            selectedPlatform = document.getElementById('reviewPlatformSearch').value;
+            if (selectedPlatform) {
+                document.getElementById('selectedPlatform').innerText = `Selected platform: ${selectedPlatform}`;
+            } else {
+                alert('Please enter a review platform.');
+            }
+        });
+
+        document.getElementById('addListing').addEventListener('click', function() {
+            const listing = document.getElementById('listingProfile').value;
+            if (listing) {
+                workRecords.push(`Added listing: ${listing}`);
+                const email = document.getElementById('email').value;
+                const userData = JSON.parse(sessionStorage.getItem(email));
+                userData.workRecords = workRecords;
+                sessionStorage.setItem(email, JSON.stringify(userData));
+                updateWorkRecords();
+            } else {
+                alert('Please enter a listing profile.');
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            sessionStorage.removeItem('userEmail');
+            location.reload();
+        });
+
+        function showTaskManagement() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('taskSection').classList.remove('hidden');
+            document.getElementById('taskManagementSection').classList.remove('hidden');
+            document.getElementById('platformSection').classList.remove('hidden');
+            document.getElementById('listingSection').classList.remove('hidden');
+            document.querySelector('.work-history').classList.remove('hidden');
+        }
+
+        // Check if user is logged in (for demo purposes)
+        window.onload = function() {
+            const userEmail = sessionStorage.getItem('userEmail');
+            if (userEmail) {
+                loadUserData(userEmail);
+                showTaskManagement();
+            }
+        };
+    </script>
+</body>
+</html>
